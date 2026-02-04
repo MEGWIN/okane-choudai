@@ -22,9 +22,27 @@ export default function DonationModal({ isOpen, onClose, amount, paypayId }: Don
   }
 
   const handleOpenPayPay = () => {
-    // This is a deep link attempt. If it fails, it usually just does nothing or opens app store.
-    // Standard URL scheme: paypay://
-    window.location.href = 'paypay://' 
+    // PayPayアプリを開く（スマホのみ動作）
+    // PCの場合はApp Storeページにフォールバック
+    const userAgent = navigator.userAgent.toLowerCase()
+    const isIOS = /iphone|ipad|ipod/.test(userAgent)
+    const isAndroid = /android/.test(userAgent)
+
+    if (isIOS || isAndroid) {
+      // スマホ: ディープリンクを試行
+      window.location.href = 'paypay://'
+      // フォールバック: 少し待ってからストアへ
+      setTimeout(() => {
+        if (isIOS) {
+          window.location.href = 'https://apps.apple.com/jp/app/paypay/id1435783608'
+        } else {
+          window.location.href = 'https://play.google.com/store/apps/details?id=jp.ne.paypay.android.app'
+        }
+      }, 1500)
+    } else {
+      // PC: PayPay公式サイトへ
+      window.open('https://paypay.ne.jp/', '_blank')
+    }
   }
 
   return (
