@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Heart, Clock } from 'lucide-react'
+import { Clock } from 'lucide-react'
 import DonationModal from './DonationModal'
 
 interface Post {
@@ -27,7 +27,6 @@ export default function PostCard({ post }: { post: Post }) {
     const calculateTime = () => {
       const now = new Date().getTime()
       const expire = new Date(post.expires_at).getTime()
-      const created = expire - (60 * 60 * 1000) // Assuming 1 hour life
       const totalLife = 60 * 60 * 1000
       const remaining = expire - now
 
@@ -61,49 +60,52 @@ export default function PostCard({ post }: { post: Post }) {
 
   return (
     <>
-      <div className="relative w-full bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl mb-8 border border-white/5">
-        
-        {/* Timer Bar */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-white/10 z-20">
-          <div 
-            className="h-full bg-gradient-to-r from-pink-500 to-red-500 transition-all duration-1000 ease-linear"
+      {/* Animal Crossing Style Card */}
+      <div className="relative w-full bg-[#fffacd] rounded-3xl overflow-hidden shadow-xl border-4 border-[#daa520]">
+
+        {/* Timer Bar - Leaf green style */}
+        <div className="absolute top-0 left-0 w-full h-2 bg-[#daa520]/30 z-20">
+          <div
+            className="h-full bg-gradient-to-r from-[#3cb371] to-[#90ee90] transition-all duration-1000 ease-linear"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         {/* Header */}
         <div className="absolute top-4 left-4 z-20 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center overflow-hidden">
-             {/* Avatar Placeholder */}
-             <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-500" />
+          <div className="w-10 h-10 rounded-full bg-[#3cb371] border-3 border-white flex items-center justify-center overflow-hidden shadow-md">
+             {/* Avatar Placeholder - Leaf icon style */}
+             <span className="text-xl">🌱</span>
           </div>
-          <div className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-xs font-bold text-white flex items-center gap-2">
-            <span>{post.users?.display_name || 'Guest User'}</span>
-            <span className="w-1 h-1 rounded-full bg-white/50" />
-            <Clock className="w-3 h-3 text-red-400" />
-            <span className="font-mono text-red-400">{timeLeft}</span>
+          <div className="px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border-2 border-[#daa520] text-xs font-bold text-[#5d4e37] flex items-center gap-2 shadow-md">
+            <span>{post.users?.display_name || 'ゲスト'}</span>
+            <span className="w-1 h-1 rounded-full bg-[#daa520]" />
+            <Clock className="w-3 h-3 text-[#daa520]" />
+            <span className="font-mono text-[#daa520]">{timeLeft}</span>
           </div>
         </div>
 
         {/* Image */}
         <div className="relative aspect-[3/4] w-full">
-          <Image 
-            src={imageUrl} 
-            alt="Give me money" 
-            fill 
+          <Image
+            src={imageUrl}
+            alt="Give me money"
+            fill
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#5d4e37]/80 via-transparent to-transparent opacity-90" />
         </div>
 
         {/* Actions (Overlay at bottom) */}
-        <div className="absolute bottom-0 left-0 w-full p-6 flex flex-col gap-4 z-20">
-          
+        <div className="absolute bottom-0 left-0 w-full p-5 flex flex-col gap-4 z-20">
+
           {post.caption && (
-             <p className="text-white/90 font-medium text-lg drop-shadow-md">
-               {post.caption}
-             </p>
+             <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-2 border-2 border-[#daa520]">
+               <p className="text-[#5d4e37] font-bold text-base">
+                 {post.caption}
+               </p>
+             </div>
           )}
 
           <div className="flex gap-2 w-full">
@@ -114,8 +116,8 @@ export default function PostCard({ post }: { post: Post }) {
         </div>
       </div>
 
-      <DonationModal 
-        isOpen={showModal} 
+      <DonationModal
+        isOpen={showModal}
         onClose={() => setShowModal(false)}
         amount={selectedAmount}
         paypayId={post.users?.paypay_id || ''}
@@ -126,19 +128,19 @@ export default function PostCard({ post }: { post: Post }) {
 
 function DonateButton({ amount, onClick, featured }: { amount: number, onClick: () => void, featured?: boolean }) {
   return (
-    <button 
+    <button
       onClick={onClick}
       className={`
-        relative flex-1 rounded-xl font-bold flex flex-col items-center justify-center py-3 transition-all active:scale-95
-        ${featured 
-          ? 'bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-lg shadow-pink-500/20 ring-1 ring-white/20' 
-          : 'bg-white/10 backdrop-blur-md text-white border border-white/10 hover:bg-white/20'
+        relative flex-1 rounded-2xl font-bold flex flex-col items-center justify-center py-3 transition-all active:scale-95 border-3
+        ${featured
+          ? 'bg-gradient-to-b from-[#3cb371] to-[#2e8b57] text-white shadow-lg border-[#1a5c36]'
+          : 'bg-white/90 backdrop-blur-md text-[#5d4e37] border-[#daa520] hover:bg-[#fffacd]'
         }
       `}
     >
       <div className="flex items-center gap-1">
-        <Heart className={`w-4 h-4 ${featured ? 'fill-white' : 'fill-pink-500 text-pink-500'}`} />
-        <span className="text-sm">¥{amount}</span>
+        <span className="text-base">{featured ? '🔔' : '💰'}</span>
+        <span className="text-sm font-bold">¥{amount}</span>
       </div>
     </button>
   )

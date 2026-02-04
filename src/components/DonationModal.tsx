@@ -46,44 +46,65 @@ export default function DonationModal({ isOpen, onClose, amount, paypayId }: Don
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-sm bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 space-y-6 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
-        
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      {/* Animal Crossing Style Modal */}
+      <div
+        className="w-full max-w-sm bg-gradient-to-b from-[#3cb371] to-[#2e8b57] border-4 border-[#1a5c36] rounded-3xl p-5 space-y-4 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+
+        {/* Header */}
         <div className="flex justify-between items-center">
-          <h3 className="text-xl font-bold">送金をお願いします❤</h3>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full">
+          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <span className="text-2xl">🔔</span> 送金をお願いします！
+          </h3>
+          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="bg-white/5 rounded-xl p-4 space-y-2">
-          <p className="text-sm text-muted-foreground">送付先 PayPay ID</p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 bg-black/50 p-3 rounded-lg font-mono text-lg">{paypayId || 'ID未設定'}</code>
-            <button 
-              onClick={handleCopy}
-              className={`p-3 rounded-lg transition-all ${copied ? 'bg-green-500 text-white' : 'bg-white/10 hover:bg-white/20'}`}
-            >
-              {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-            </button>
+        {/* Content Card */}
+        <div className="bg-[#fffacd] rounded-2xl p-4 space-y-4 border-3 border-[#daa520]">
+
+          {/* PayPay ID Section */}
+          <div className="space-y-2">
+            <p className="text-sm font-bold text-[#8b7355]">送付先 PayPay ID</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 bg-white p-3 rounded-xl font-mono text-base text-[#5d4e37] border-2 border-[#daa520]">
+                {paypayId || 'ID未設定'}
+              </code>
+              <button
+                onClick={handleCopy}
+                className={`p-3 rounded-xl transition-all border-2 ${
+                  copied
+                    ? 'bg-[#3cb371] text-white border-[#2e8b57]'
+                    : 'bg-white text-[#5d4e37] border-[#daa520] hover:bg-[#fffacd]'
+                }`}
+              >
+                {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              </button>
+            </div>
+            {copied && <p className="text-xs text-[#3cb371] text-right font-bold">コピーしました！</p>}
           </div>
-          {copied && <p className="text-xs text-green-500 text-right">コピーしました！</p>}
+
+          {/* Amount Display */}
+          <div className="text-center py-2">
+            <p className="text-sm text-[#8b7355]">金額</p>
+            <p className="text-4xl font-bold text-[#3cb371]">¥{amount}</p>
+          </div>
+
         </div>
 
-        <div className="text-center space-y-1">
-          <p className="text-sm text-muted-foreground">金額</p>
-          <p className="text-4xl font-bold text-pink-500">¥{amount}</p>
-        </div>
-
+        {/* Action Button */}
         <div className="space-y-3">
-          <button 
+          <button
             onClick={handleOpenPayPay}
-            className="w-full py-4 bg-[#ff0033] text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            className="w-full py-4 bg-[#ff0033] text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity border-4 border-[#cc0029] shadow-lg"
           >
             <ExternalLink className="w-5 h-5" />
             PayPayアプリを開く
           </button>
-          <p className="text-xs text-center text-muted-foreground">
+          <p className="text-xs text-center text-white/80">
             ※ 上記ID宛に手動で送金してください。<br />
             ※ 送金完了後、自動で反映される機能は現在ありません。
           </p>

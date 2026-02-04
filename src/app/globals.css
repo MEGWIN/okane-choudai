@@ -20,72 +20,201 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-  
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+
+  /* Animal Crossing Colors */
+  --color-ac-green: #3cb371;
+  --color-ac-green-dark: #2e8b57;
+  --color-ac-cream: #fffacd;
+  --color-ac-brown: #5d4e37;
+  --color-ac-gold: #daa520;
+  --color-ac-leaf: #90ee90;
 }
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 10% 3.9%;
-  --radius: 0.5rem;
+  /* Animal Crossing Light Theme */
+  --background: 145 63% 85%;
+  --foreground: 30 25% 25%;
+  --card: 60 100% 97%;
+  --card-foreground: 30 25% 25%;
+  --popover: 60 100% 97%;
+  --popover-foreground: 30 25% 25%;
+  --primary: 146 50% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 60 60% 94%;
+  --secondary-foreground: 30 25% 25%;
+  --muted: 145 30% 90%;
+  --muted-foreground: 30 15% 45%;
+  --accent: 43 74% 49%;
+  --accent-foreground: 30 25% 20%;
+  --destructive: 0 65% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 145 30% 80%;
+  --input: 145 30% 85%;
+  --ring: 146 50% 45%;
+  --radius: 1rem;
 }
 
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 0 72.2% 50.6%;
-  --primary-foreground: 0 85.7% 97.3%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
+  /* Animal Crossing Dark Theme (evening mode) */
+  --background: 145 40% 15%;
+  --foreground: 60 50% 95%;
+  --card: 145 35% 20%;
+  --card-foreground: 60 50% 95%;
+  --popover: 145 35% 20%;
+  --popover-foreground: 60 50% 95%;
+  --primary: 146 50% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 145 30% 25%;
+  --secondary-foreground: 60 50% 95%;
+  --muted: 145 25% 25%;
+  --muted-foreground: 145 20% 65%;
+  --accent: 43 74% 49%;
+  --accent-foreground: 30 25% 15%;
+  --destructive: 0 65% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 145 25% 30%;
+  --input: 145 25% 25%;
+  --ring: 146 50% 50%;
 }
 
-@layer base {
-  body {
-    @apply bg-background text-foreground antialiased;
-  }
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'BIZ UDGothic', 'Meiryo', sans-serif;
 }
 
-/* Custom premium styles */
+/* Animal Crossing Styled Components */
+.ac-panel {
+  background-color: hsl(var(--card) / 0.95);
+  backdrop-filter: blur(12px);
+  border: 2px solid hsl(var(--primary) / 0.3);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-radius: 1.5rem;
+}
+
+.ac-header {
+  background: linear-gradient(180deg, #3cb371 0%, #2e8b57 100%);
+  border-bottom: 4px solid hsl(var(--primary) / 0.4);
+}
+
+.ac-nav {
+  background: linear-gradient(180deg, #2e8b57 0%, #228b22 100%);
+  border-top: 4px solid hsl(var(--primary) / 0.4);
+}
+
+.ac-button {
+  background: linear-gradient(to bottom, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+  color: hsl(var(--primary-foreground));
+  font-weight: bold;
+  border-radius: 1rem;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 2px solid hsl(var(--primary) / 0.5);
+  transition: all 0.2s;
+}
+
+.ac-button:hover {
+  transform: scale(1.05);
+}
+
+.ac-button:active {
+  transform: scale(0.95);
+}
+
+.ac-button-secondary {
+  background: linear-gradient(to bottom, hsl(var(--card)), hsl(var(--secondary)));
+  color: hsl(var(--foreground));
+  font-weight: bold;
+  border-radius: 1rem;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 2px solid hsl(var(--border));
+  transition: all 0.2s;
+}
+
+.ac-button-secondary:hover {
+  transform: scale(1.05);
+}
+
+.ac-button-secondary:active {
+  transform: scale(0.95);
+}
+
+.ac-card {
+  background-color: hsl(var(--card));
+  border: 3px solid hsl(var(--accent) / 0.5);
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 0 hsl(var(--accent) / 0.3), 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.ac-input {
+  background-color: hsl(var(--card));
+  border: 2px solid hsl(var(--border));
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.ac-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.5);
+  border-color: hsl(var(--primary));
+}
+
+/* Leaf icon decoration */
+.leaf-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #90ee90 0%, #32cd32 100%);
+  border-radius: 0 50% 50% 50%;
+  transform: rotate(-45deg);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.leaf-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 18px;
+  background: #228b22;
+  transform: translate(-50%, -30%) rotate(45deg);
+}
+
+/* Bell animation */
+@keyframes bellSwing {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.bell-animate {
+  animation: bellSwing 2s ease-in-out infinite;
+}
+
+/* Text styles */
+.text-gradient {
+  background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Legacy support */
 .glass-panel {
-  @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-xl;
+  background-color: hsl(var(--card) / 0.95);
+  backdrop-filter: blur(12px);
+  border: 2px solid hsl(var(--primary) / 0.3);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border-radius: 1.5rem;
 }
 
 .auth-gradient {
-  background: radial-gradient(circle at center, #2a2a2a 0%, #0a0a0a 100%);
-}
-
-.text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500;
+  background: linear-gradient(180deg, hsl(145 40% 20%) 0%, hsl(145 50% 12%) 100%);
 }

@@ -25,34 +25,37 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col gap-6">
-      
-      {/* Hero / Welcome for empty state */}
+
+      {/* Hero / Welcome for empty state - Animal Crossing Style */}
       {(!posts || posts.length === 0) && (
-        <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 opacity-80">
-          <div className="text-6xl">💸</div>
-          <h2 className="text-2xl font-bold">まだ投稿がありません</h2>
-          <p className="text-muted-foreground">
+        <div className="ac-card flex flex-col items-center justify-center py-12 px-6 text-center space-y-5 bg-[#fffacd]/95">
+          <div className="text-6xl bell-animate">🔔</div>
+          <h2 className="text-2xl font-bold text-[#5d4e37]">まだ投稿がありません</h2>
+          <p className="text-[#8b7355]">
             一番乗りでお金をお願いしてみましょう！<br />
             写真は1時間で消えるので安心です。
           </p>
-          <Link href="/upload" className="px-6 py-3 bg-white text-black rounded-full font-bold shadow-lg hover:scale-105 transition-transform">
+          <Link
+            href="/upload"
+            className="ac-button px-8 py-4 text-lg"
+          >
             投稿する
           </Link>
         </div>
       )}
 
       {/* Post Stream */}
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-6">
         {posts?.map((post) => (
           // @ts-ignore
           <PostCard key={post.id} post={post} />
         ))}
       </div>
 
-       {/* Floating Action Button (Mobile) */}
-       <Link 
+       {/* Floating Action Button (Mobile) - Animal Crossing Style */}
+       <Link
         href="/upload"
-        className="fixed bottom-24 right-4 z-40 bg-white text-black p-4 rounded-full shadow-2xl shadow-white/20 hover:scale-110 active:scale-90 transition-all md:hidden"
+        className="fixed bottom-28 right-4 z-40 bg-[#fffacd] text-[#5d4e37] p-4 rounded-full shadow-xl border-4 border-[#daa520] hover:scale-110 active:scale-90 transition-all md:hidden"
       >
         <Plus className="w-6 h-6" />
       </Link>

@@ -56,7 +56,7 @@ export default function UploadPage() {
       // 2. Upload Image
       const fileExt = file.name.split('.').pop()
       const fileName = `${user.id}/${Date.now()}.${fileExt}`
-      
+
       const { error: uploadError } = await supabase.storage
         .from('posts')
         .upload(fileName, file)
@@ -86,15 +86,19 @@ export default function UploadPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500">
-        写真を投稿して<br />お金をお願いする
-      </h1>
+      {/* Header - Animal Crossing Style */}
+      <div className="ac-card bg-[#fffacd]/95 p-4">
+        <h1 className="text-xl font-bold text-[#5d4e37] flex items-center gap-2">
+          <span className="text-2xl">📸</span>
+          写真を投稿して<br />お金をお願いする
+        </h1>
+      </div>
 
       <div className="space-y-4">
-        {/* Image Dropzone */}
+        {/* Image Dropzone - Animal Crossing Style */}
         <div
-          className={`relative w-full aspect-[3/4] rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center overflow-hidden
-            ${previewUrl ? 'border-transparent' : 'border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/40'}
+          className={`relative w-full aspect-[3/4] rounded-3xl border-4 border-dashed transition-all flex flex-col items-center justify-center overflow-hidden
+            ${previewUrl ? 'border-transparent' : 'border-[#daa520] bg-[#fffacd]/80 hover:bg-[#fffacd]'}
           `}
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
@@ -102,28 +106,28 @@ export default function UploadPage() {
         >
           {previewUrl ? (
             <>
-              <Image 
-                src={previewUrl} 
-                alt="Preview" 
-                fill 
-                className="object-cover"
+              <Image
+                src={previewUrl}
+                alt="Preview"
+                fill
+                className="object-cover rounded-3xl"
               />
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); clearFile(); }}
-                className="absolute top-2 right-2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70"
+                className="absolute top-3 right-3 p-2 bg-[#5d4e37]/80 rounded-full text-white hover:bg-[#5d4e37]"
               >
                 <X className="w-5 h-5" />
               </button>
             </>
           ) : (
-            <div className="flex flex-col items-center gap-4 text-muted-foreground">
-              <div className="p-4 rounded-full bg-white/5">
-                <Camera className="w-8 h-8" />
+            <div className="flex flex-col items-center gap-4 text-[#8b7355]">
+              <div className="p-5 rounded-full bg-[#daa520]/20">
+                <Camera className="w-10 h-10 text-[#daa520]" />
               </div>
-              <p className="text-sm">タップして写真を選択</p>
+              <p className="font-bold">タップして写真を選択</p>
             </div>
           )}
-          
+
           <input
             ref={fileInputRef}
             type="file"
@@ -133,26 +137,26 @@ export default function UploadPage() {
           />
         </div>
 
-        {/* Caption Input */}
+        {/* Caption Input - Animal Crossing Style */}
         <div className="space-y-2">
-          <label className="text-sm text-muted-foreground ml-1">ひとこと (任意)</label>
+          <label className="text-sm font-bold text-[#5d4e37] ml-1">ひとこと (任意)</label>
           <input
             type="text"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full bg-[#fffacd] border-3 border-[#daa520] rounded-2xl px-4 py-3 placeholder-[#8b7355]/50 text-[#5d4e37] focus:outline-none focus:ring-2 focus:ring-[#3cb371]"
             placeholder="例: スタバ代ほしい..."
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
           />
         </div>
 
-        {/* Submit Button */}
+        {/* Submit Button - Animal Crossing Style */}
         <button
           onClick={handleUpload}
           disabled={!file || isUploading}
-          className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all
-            ${!file 
-              ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' 
-              : 'bg-gradient-to-r from-pink-600 to-violet-600 text-white hover:shadow-pink-500/25 active:scale-95'
+          className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all border-4
+            ${!file
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400'
+              : 'bg-gradient-to-b from-[#3cb371] to-[#2e8b57] text-white border-[#1a5c36] hover:scale-[1.02] active:scale-95'
             }
           `}
         >
@@ -162,11 +166,14 @@ export default function UploadPage() {
               アップロード中...
             </>
           ) : (
-            'お金ちょうだい❤'
+            <>
+              <span className="text-xl">🔔</span>
+              お金ちょうだい！
+            </>
           )}
         </button>
 
-        <p className="text-xs text-center text-muted-foreground">
+        <p className="text-xs text-center text-[#5d4e37]/70 bg-[#fffacd]/50 rounded-xl p-3">
           ※ 投稿は1時間後に自動的に削除されます。<br />
           ※ 18歳未満の利用は禁止されています。
         </p>
