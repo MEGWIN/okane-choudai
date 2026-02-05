@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { Share2 } from 'lucide-react'
 import DonationModal from './DonationModal'
 import HeartButton from './HeartButton'
 
@@ -36,6 +37,21 @@ export default function PostCard({ post, rank }: { post: Post, rank: number }) {
     const id = Date.now()
     setFlyingHearts(prev => [...prev, id])
     setTimeout(() => setFlyingHearts(prev => prev.filter(h => h !== id)), 800)
+  }
+
+  const handleShare = async () => {
+    const name = post.users?.display_name || 'ゲスト'
+    const shareUrl = `${window.location.origin}/posts/${post.id}`
+    const shareText = `${name}さんの投稿に❤${heartCount}個！推しポチ❤️でチェック！ #推しポチ`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: '推しポチ❤️', text: shareText, url: shareUrl })
+      } catch { /* user cancelled */ }
+    } else {
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`
+      window.open(twitterUrl, '_blank', 'noopener')
+    }
   }
 
   const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/posts/${post.image_url}`
@@ -118,6 +134,15 @@ export default function PostCard({ post, rank }: { post: Post, rank: number }) {
             <DonateButton amount={100} onClick={() => handleDonate(100)} featured />
             <DonateButton amount={500} onClick={() => handleDonate(500)} />
           </div>
+
+          {/* シェアボタン */}
+          <button
+            onClick={handleShare}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-[#1da1f2]/90 backdrop-blur-md text-white font-bold text-sm border-2 border-[#1a8cd8] active:scale-95 transition-all"
+          >
+            <Share2 className="w-4 h-4" />
+            シェアする
+          </button>
         </div>
 
         <style jsx>{`

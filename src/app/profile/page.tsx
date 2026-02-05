@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Camera } from 'lucide-react'
+import { Loader2, Camera, Copy, Check, Share2 } from 'lucide-react'
 import Image from 'next/image'
 
 export default function ProfilePage() {
@@ -14,6 +14,9 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [referralCode, setReferralCode] = useState('')
+  const [bonusHearts, setBonusHearts] = useState(0)
+  const [copied, setCopied] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
   const router = useRouter()
@@ -37,6 +40,19 @@ export default function ProfilePage() {
         setDisplayName(profile.display_name || '')
         setPaypayId(profile.paypay_id || '')
         setAvatarUrl(profile.avatar_url || null)
+        setBonusHearts(profile.bonus_hearts || 0)
+
+        // Generate referral code if not exists
+        if (profile.referral_code) {
+          setReferralCode(profile.referral_code)
+        } else {
+          const code = Math.random().toString(36).substring(2, 10)
+          await supabase
+            .from('users')
+            .update({ referral_code: code })
+            .eq('id', user.id)
+          setReferralCode(code)
+        }
       }
       setLoading(false)
     }
@@ -196,6 +212,65 @@ export default function ProfilePage() {
             </>
           )}
         </button>
+
+        {/* Invite Section */}
+        <div className="ac-card bg-white/95 p-4 space-y-3">
+          <label className="text-sm font-bold text-[#ff4567] flex items-center gap-2">
+            <span>💌</span> 友だちを招待
+          </label>
+
+          {/* Bonus Hearts Display */}
+          <div className="flex items-center gap-3 bg-[#fffacd] rounded-2xl p-3 border-2 border-[#daa520]">
+            <span className="text-2xl">❤</span>
+            <div>
+              <p className="text-xs text-[#8b7355] font-bold">ボーナスハート</p>
+              <p className="text-xl font-black text-[#ff4567]">{bonusHearts}</p>
+            </div>
+          </div>
+
+          {/* Referral Code + Copy */}
+          <div className="flex gap-2">
+            <div className="flex-1 bg-[#fffacd] border-3 border-[#ff4567]/30 rounded-2xl px-4 py-3 text-[#5d4e37] font-mono font-bold text-center tracking-wider">
+              {referralCode || '...'}
+            </div>
+            <button
+              onClick={async () => {
+                const url = `${window.location.origin}/invite/${referralCode}`
+                await navigator.clipboard.writeText(url)
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2000)
+              }}
+              className="px-4 rounded-2xl bg-[#ff4567] text-white font-bold border-3 border-[#d63050] active:scale-95 transition-all flex items-center gap-1"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? 'OK!' : 'コピー'}
+            </button>
+          </div>
+
+          {/* Share Invite Link */}
+          <button
+            onClick={async () => {
+              const url = `${window.location.origin}/invite/${referralCode}`
+              const text = `推しポチ❤️に招待されました！登録してボーナスハートをもらおう🎁 #推しポチ`
+              if (navigator.share) {
+                try {
+                  await navigator.share({ title: '推しポチ❤️ 招待', text, url })
+                } catch { /* cancelled */ }
+              } else {
+                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
+                window.open(twitterUrl, '_blank', 'noopener')
+              }
+            }}
+            className="w-full py-3 bg-[#1da1f2] text-white font-bold rounded-2xl border-3 border-[#1a8cd8] active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <Share2 className="w-4 h-4" />
+            招待リンクをシェアする
+          </button>
+
+          <p className="text-xs text-[#8b7355]">
+            友だちが登録すると、あなたと友だちの両方に❤5個ボーナス！
+          </p>
+        </div>
 
         {/* Logout Section */}
         <div className="pt-6 border-t-2 border-[#daa520]/30">
