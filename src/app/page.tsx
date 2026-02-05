@@ -1,30 +1,55 @@
 import { createClient } from '@/utils/supabase/server'
 import PostCard from '@/components/PostCard'
+import TopicBanner from '@/components/TopicBanner'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
 
-export const revalidate = 60 // Revalidate every minute
+export const dynamic = 'force-dynamic' // Always fetch fresh data
 
 export default async function Home() {
   const supabase = await createClient()
+  const now = new Date().toISOString()
 
-  // Fetch active posts
-  const { data: posts } = await supabase
-    .from('posts')
-    .select(`
-      *,
-      users (
-        display_name,
-        avatar_url,
-        paypay_id
-      )
-    `)
-    // .eq('is_active', true) // Temporarily commented out to show all for debug if cron not running
-    .gt('expires_at', new Date().toISOString()) // Only show non-expired
-    .order('created_at', { ascending: false })
+  // 現在のお題を取得
+  const { data: currentTopic } = await supabase
+    .from('hourly_topics')
+    .select('id')
+    .lte('starts_at', now)
+    .gt('ends_at', now)
+    .eq('is_active', true)
+    .limit(1)
+    .single()
+
+  // 現在のお題の投稿のみ取得
+  let posts = null
+  if (currentTopic) {
+    const { data } = await supabase
+      .from('posts')
+      .select(`
+        *,
+        users (
+          display_name,
+          avatar_url,
+          paypay_id
+        )
+      `)
+      .eq('topic_id', currentTopic.id)
+      .gt('expires_at', now)
+      .order('created_at', { ascending: false })
+    posts = data
+  }
+
+  // ❤数でランクを計算（表示順は新着のまま）
+  const rankMap = new Map<string, number>()
+  if (posts) {
+    const sorted = [...posts].sort((a, b) => (b.heart_count || 0) - (a.heart_count || 0))
+    sorted.forEach((p, i) => rankMap.set(p.id, i + 1))
+  }
 
   return (
     <div className="flex flex-col gap-6">
+
+      {/* Current Topic Banner */}
+      <TopicBanner />
 
       {/* Hero / Welcome for empty state - Animal Crossing Style */}
       {(!posts || posts.length === 0) && (
@@ -44,21 +69,13 @@ export default async function Home() {
         </div>
       )}
 
-      {/* Post Stream */}
+      {/* Post Stream（新着順、ランクは❤数順） */}
       <div className="flex flex-col gap-6">
         {posts?.map((post) => (
           // @ts-ignore
-          <PostCard key={post.id} post={post} />
+          <PostCard key={post.id} post={post} rank={rankMap.get(post.id) || 1} />
         ))}
       </div>
-
-       {/* Floating Action Button (Mobile) - Animal Crossing Style */}
-       <Link
-        href="/upload"
-        className="fixed bottom-28 right-4 z-40 bg-[#fffacd] text-[#5d4e37] p-4 rounded-full shadow-xl border-4 border-[#daa520] hover:scale-110 active:scale-90 transition-all md:hidden"
-      >
-        <Plus className="w-6 h-6" />
-      </Link>
 
     </div>
   )

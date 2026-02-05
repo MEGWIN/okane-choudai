@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Link from 'next/link'
-import { Home, Upload, User } from 'lucide-react'
+import { Home, Upload, User, Trophy } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'お金ちょうだい',
+  title: '推しポチ❤️ | OshiPochi',
   description: '写真1枚で勝負する超シンプルマイクロ寄付プラットフォーム',
 }
 
@@ -22,9 +22,8 @@ export default function RootLayout({
           <header className="fixed top-0 w-full max-w-md z-50 ac-header px-4 h-16 flex items-center justify-between">
              <Link href="/" className="font-bold text-xl tracking-tight flex items-center gap-3">
                 <div className="leaf-icon scale-75"></div>
-                <span className="text-white drop-shadow-md">お金ちょうだい</span>
+                <span className="text-white drop-shadow-md">推しポチ❤️</span>
              </Link>
-             <div className="text-2xl">🔔</div>
           </header>
 
           <main className="flex-1 pt-20 pb-24 px-4">
@@ -44,6 +43,12 @@ export default function RootLayout({
                 <Upload className="w-7 h-7" />
               </div>
               <span className="text-[10px] font-bold text-white mt-1">とうこう</span>
+            </Link>
+            <Link href="/ranking" className="flex flex-col items-center gap-1 text-white/80 hover:text-white transition-colors">
+              <div className="bg-white/20 p-2 rounded-xl">
+                <Trophy className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-bold">ランキング</span>
             </Link>
             <Link href="/profile" className="flex flex-col items-center gap-1 text-white/80 hover:text-white transition-colors">
               <div className="bg-white/20 p-2 rounded-xl">

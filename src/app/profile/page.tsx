@@ -1,16 +1,20 @@
 'use client'
 
 import { createClient } from '@/utils/supabase/client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Camera } from 'lucide-react'
+import Image from 'next/image'
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [displayName, setDisplayName] = useState('')
   const [paypayId, setPaypayId] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
   const router = useRouter()
 
@@ -32,11 +36,50 @@ export default function ProfilePage() {
       if (profile) {
         setDisplayName(profile.display_name || '')
         setPaypayId(profile.paypay_id || '')
+        setAvatarUrl(profile.avatar_url || null)
       }
       setLoading(false)
     }
     loadProfile()
   }, [router, supabase])
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    setUploadingAvatar(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}/avatar.${fileExt}`
+
+      // Upload to avatars bucket (overwrite existing)
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true })
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName)
+
+      // Add cache buster to force refresh
+      const newUrl = `${publicUrl}?t=${Date.now()}`
+
+      // Update user profile
+      await supabase
+        .from('users')
+        .update({ avatar_url: newUrl })
+        .eq('id', user.id)
+
+      setAvatarUrl(newUrl)
+    } catch (error: any) {
+      alert('アバターのアップロードに失敗しました: ' + error.message)
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
 
   const handleUpdate = async () => {
     setUpdating(true)
@@ -73,12 +116,32 @@ export default function ProfilePage() {
       {/* Header Card - Animal Crossing Style */}
       <div className="ac-card bg-[#fffacd]/95 p-5">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[#3cb371] border-4 border-[#daa520] flex items-center justify-center text-3xl shadow-md">
-            🏠
-          </div>
+          <button
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="relative w-16 h-16 rounded-full bg-[#3cb371] border-4 border-[#daa520] flex items-center justify-center text-3xl shadow-md overflow-hidden group"
+          >
+            {uploadingAvatar ? (
+              <Loader2 className="w-6 h-6 animate-spin text-white" />
+            ) : avatarUrl ? (
+              <Image src={avatarUrl} alt="avatar" width={64} height={64} className="object-cover w-full h-full" />
+            ) : (
+              <span>🏠</span>
+            )}
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera className="w-5 h-5 text-white" />
+            </div>
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
           <div>
             <h1 className="text-xl font-bold text-[#5d4e37]">マイページ</h1>
-            <p className="text-sm text-[#8b7355]">プロフィール設定</p>
+            <p className="text-sm text-[#8b7355]">アイコンをタップで変更</p>
           </div>
         </div>
       </div>

@@ -1,19 +1,57 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Camera, Loader2, X } from 'lucide-react'
+import { Camera, Loader2, X, Clock, ChevronDown } from 'lucide-react'
 import Image from 'next/image'
+
+interface Topic {
+  id: string
+  title: string
+  starts_at: string
+  ends_at: string
+}
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [caption, setCaption] = useState('')
+  const [topics, setTopics] = useState<Topic[]>([])
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
+  const [loadingTopics, setLoadingTopics] = useState(true)
+  const [topicOpen, setTopicOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  // 24時間以内のお題を取得（現在 + 未来）
+  useEffect(() => {
+    async function fetchTopics() {
+      const now = new Date()
+      const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+
+      const { data } = await supabase
+        .from('hourly_topics')
+        .select('id, title, starts_at, ends_at')
+        .gt('ends_at', now.toISOString())
+        .lte('starts_at', in24h.toISOString())
+        .eq('is_active', true)
+        .order('starts_at', { ascending: true })
+
+      if (data && data.length > 0) {
+        setTopics(data)
+        // 現在開催中のお題があればデフォルト選択
+        const current = data.find(t =>
+          new Date(t.starts_at) <= now && new Date(t.ends_at) > now
+        )
+        setSelectedTopic(current || data[0])
+      }
+      setLoadingTopics(false)
+    }
+    fetchTopics()
+  }, [supabase])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -41,19 +79,17 @@ export default function UploadPage() {
   }
 
   const handleUpload = async () => {
-    if (!file) return
+    if (!file || !selectedTopic) return
 
     setIsUploading(true)
     try {
-      // 1. Check User (Todo: Handle Auth)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        alert('ログインが必要です（まだ実装されていません）')
+        alert('ログインが必要です')
         setIsUploading(false)
         return
       }
 
-      // 2. Upload Image
       const fileExt = file.name.split('.').pop()
       const fileName = `${user.id}/${Date.now()}.${fileExt}`
 
@@ -63,14 +99,15 @@ export default function UploadPage() {
 
       if (uploadError) throw uploadError
 
-      // 3. Insert Post Record
+      // お題の終了時刻を投稿の有効期限にする
       const { error: dbError } = await supabase
         .from('posts')
         .insert({
           user_id: user.id,
           image_url: fileName,
           caption: caption,
-          expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
+          topic_id: selectedTopic.id,
+          expires_at: selectedTopic.ends_at,
         })
 
       if (dbError) throw dbError
@@ -84,9 +121,24 @@ export default function UploadPage() {
     }
   }
 
+  // お題の状態を判定
+  function getTopicStatus(topic: Topic) {
+    const now = Date.now()
+    const start = new Date(topic.starts_at).getTime()
+    const end = new Date(topic.ends_at).getTime()
+    if (now >= start && now < end) return 'now'
+    if (now < start) return 'future'
+    return 'past'
+  }
+
+  // 時刻フォーマット
+  function formatTime(dateStr: string) {
+    return new Date(dateStr).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      {/* Header - Animal Crossing Style */}
+      {/* Header */}
       <div className="ac-card bg-[#fffacd]/95 p-4">
         <h1 className="text-xl font-bold text-[#5d4e37] flex items-center gap-2">
           <span className="text-2xl">📸</span>
@@ -94,8 +146,77 @@ export default function UploadPage() {
         </h1>
       </div>
 
+      {/* お題セレクター（折りたたみ） */}
+      {loadingTopics ? (
+        <div className="flex justify-center py-4">
+          <Loader2 className="animate-spin text-[#3cb371] w-6 h-6" />
+        </div>
+      ) : topics.length === 0 ? (
+        <div className="ac-card bg-[#8b7355]/80 p-4 text-white">
+          <p className="text-sm font-bold">📝 現在お題がありません</p>
+          <p className="text-xs text-white/70 mt-1">次のお題が始まるまでお待ちください</p>
+        </div>
+      ) : (
+        <div className="relative">
+          {/* 選択中のお題（タップで開閉） */}
+          <button
+            onClick={() => setTopicOpen(!topicOpen)}
+            className="w-full text-left p-3 rounded-2xl border-3 bg-gradient-to-r from-[#3cb371] to-[#2e8b57] text-white border-[#1a5c36] shadow-lg"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white/70">📝 お題</span>
+                {selectedTopic && getTopicStatus(selectedTopic) === 'now' && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">NOW</span>
+                )}
+              </div>
+              <ChevronDown className={`w-5 h-5 text-white/80 transition-transform ${topicOpen ? 'rotate-180' : ''}`} />
+            </div>
+            {selectedTopic && (
+              <div className="flex items-center justify-between mt-1">
+                <span className="font-bold text-lg">{selectedTopic.title}</span>
+                <span className="text-xs text-white/80">{formatTime(selectedTopic.starts_at)} 〜 {formatTime(selectedTopic.ends_at)}</span>
+              </div>
+            )}
+          </button>
+
+          {/* ドロップダウンリスト */}
+          {topicOpen && (
+            <div className="mt-2 flex flex-col gap-1.5 bg-white/90 backdrop-blur-md rounded-2xl border-3 border-[#daa520] p-2 shadow-xl">
+              {topics.map(topic => {
+                const status = getTopicStatus(topic)
+                const isSelected = selectedTopic?.id === topic.id
+                return (
+                  <button
+                    key={topic.id}
+                    onClick={() => { setSelectedTopic(topic); setTopicOpen(false) }}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl transition-all ${
+                      isSelected
+                        ? 'bg-[#3cb371] text-white'
+                        : 'text-[#5d4e37] hover:bg-[#fffacd]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {status === 'now' && (
+                          <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">NOW</span>
+                        )}
+                        <span className="font-bold text-sm">{topic.title}</span>
+                      </div>
+                      <span className={`text-xs ${isSelected ? 'text-white/80' : 'text-[#8b7355]'}`}>
+                        {formatTime(topic.starts_at)}〜{formatTime(topic.ends_at)}
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="space-y-4">
-        {/* Image Dropzone - Animal Crossing Style */}
+        {/* Image Dropzone */}
         <div
           className={`relative w-full aspect-[3/4] rounded-3xl border-4 border-dashed transition-all flex flex-col items-center justify-center overflow-hidden
             ${previewUrl ? 'border-transparent' : 'border-[#daa520] bg-[#fffacd]/80 hover:bg-[#fffacd]'}
@@ -137,7 +258,7 @@ export default function UploadPage() {
           />
         </div>
 
-        {/* Caption Input - Animal Crossing Style */}
+        {/* Caption Input */}
         <div className="space-y-2">
           <label className="text-sm font-bold text-[#5d4e37] ml-1">ひとこと (任意)</label>
           <input
@@ -149,12 +270,12 @@ export default function UploadPage() {
           />
         </div>
 
-        {/* Submit Button - Animal Crossing Style */}
+        {/* Submit Button */}
         <button
           onClick={handleUpload}
-          disabled={!file || isUploading}
+          disabled={!file || !selectedTopic || isUploading}
           className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all border-4
-            ${!file
+            ${!file || !selectedTopic
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400'
               : 'bg-gradient-to-b from-[#3cb371] to-[#2e8b57] text-white border-[#1a5c36] hover:scale-[1.02] active:scale-95'
             }
@@ -168,13 +289,13 @@ export default function UploadPage() {
           ) : (
             <>
               <span className="text-xl">🔔</span>
-              お金ちょうだい！
+              {selectedTopic ? `「${selectedTopic.title}」に投稿する` : 'お題を選んでね'}
             </>
           )}
         </button>
 
         <p className="text-xs text-center text-[#5d4e37]/70 bg-[#fffacd]/50 rounded-xl p-3">
-          ※ 投稿は1時間後に自動的に削除されます。<br />
+          ※ 投稿はお題終了時に自動的に削除されます。<br />
           ※ 18歳未満の利用は禁止されています。
         </p>
       </div>
