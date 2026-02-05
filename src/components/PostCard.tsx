@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Share2 } from 'lucide-react'
+import { Share2, Copy, Check, X } from 'lucide-react'
 import DonationModal from './DonationModal'
 import HeartButton from './HeartButton'
 
@@ -39,19 +39,39 @@ export default function PostCard({ post, rank }: { post: Post, rank: number }) {
     setTimeout(() => setFlyingHearts(prev => prev.filter(h => h !== id)), 800)
   }
 
-  const handleShare = async () => {
+  const [showSharePanel, setShowSharePanel] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
+
+  const getShareData = () => {
     const name = post.users?.display_name || 'ゲスト'
     const shareUrl = `${window.location.origin}/posts/${post.id}`
     const shareText = `${name}さんの投稿に❤${heartCount}個！推しポチ❤️でチェック！ #推しポチ`
+    return { shareUrl, shareText }
+  }
 
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: '推しポチ❤️', text: shareText, url: shareUrl })
-      } catch { /* user cancelled */ }
-    } else {
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`
-      window.open(twitterUrl, '_blank', 'noopener')
-    }
+  const shareToLine = () => {
+    const { shareUrl, shareText } = getShareData()
+    window.open(`https://line.me/R/share?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`, '_blank', 'noopener')
+  }
+
+  const shareToX = () => {
+    const { shareUrl, shareText } = getShareData()
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener')
+  }
+
+  const shareToInstagram = async () => {
+    const { shareUrl } = getShareData()
+    await navigator.clipboard.writeText(shareUrl)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
+    alert('リンクをコピーしました！\nInstagramのストーリーやDMに貼り付けてね')
+  }
+
+  const copyLink = async () => {
+    const { shareUrl } = getShareData()
+    await navigator.clipboard.writeText(shareUrl)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
   }
 
   const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/posts/${post.image_url}`
@@ -136,13 +156,42 @@ export default function PostCard({ post, rank }: { post: Post, rank: number }) {
           </div>
 
           {/* シェアボタン */}
-          <button
-            onClick={handleShare}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-[#1da1f2]/90 backdrop-blur-md text-white font-bold text-sm border-2 border-[#1a8cd8] active:scale-95 transition-all"
-          >
-            <Share2 className="w-4 h-4" />
-            シェアする
-          </button>
+          {!showSharePanel ? (
+            <button
+              onClick={() => setShowSharePanel(true)}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/80 backdrop-blur-md text-[#5d4e37] font-bold text-sm border-2 border-[#daa520] active:scale-95 transition-all"
+            >
+              <Share2 className="w-4 h-4" />
+              シェアする
+            </button>
+          ) : (
+            <div className="bg-white/95 backdrop-blur-md rounded-xl border-2 border-[#daa520] p-2 space-y-1.5">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-bold text-[#5d4e37]">シェア先を選択</span>
+                <button onClick={() => setShowSharePanel(false)} className="text-[#8b7355]">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                <button onClick={shareToLine} className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[#06C755] text-white active:scale-95 transition-all">
+                  <span className="text-lg">💬</span>
+                  <span className="text-[10px] font-bold">LINE</span>
+                </button>
+                <button onClick={shareToX} className="flex flex-col items-center gap-1 py-2 rounded-xl bg-black text-white active:scale-95 transition-all">
+                  <span className="text-lg">𝕏</span>
+                  <span className="text-[10px] font-bold">X</span>
+                </button>
+                <button onClick={shareToInstagram} className="flex flex-col items-center gap-1 py-2 rounded-xl bg-gradient-to-br from-[#f09433] via-[#e6683c] to-[#bc1888] text-white active:scale-95 transition-all">
+                  <span className="text-lg">📷</span>
+                  <span className="text-[10px] font-bold">Insta</span>
+                </button>
+                <button onClick={copyLink} className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[#5865F2] text-white active:scale-95 transition-all">
+                  {linkCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                  <span className="text-[10px] font-bold">{linkCopied ? 'OK!' : 'コピー'}</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <style jsx>{`

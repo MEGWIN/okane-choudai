@@ -247,25 +247,43 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {/* Share Invite Link */}
-          <button
-            onClick={async () => {
-              const url = `${window.location.origin}/invite/${referralCode}`
-              const text = `推しポチ❤️に招待されました！登録してボーナスハートをもらおう🎁 #推しポチ`
-              if (navigator.share) {
-                try {
-                  await navigator.share({ title: '推しポチ❤️ 招待', text, url })
-                } catch { /* cancelled */ }
-              } else {
-                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
-                window.open(twitterUrl, '_blank', 'noopener')
-              }
-            }}
-            className="w-full py-3 bg-[#1da1f2] text-white font-bold rounded-2xl border-3 border-[#1a8cd8] active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            <Share2 className="w-4 h-4" />
-            招待リンクをシェアする
-          </button>
+          {/* Share Invite Links */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/invite/${referralCode}`
+                const text = `推しポチ❤️に招待されました！登録してボーナスハートをもらおう🎁\n${url}`
+                window.open(`https://line.me/R/share?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
+              }}
+              className="flex flex-col items-center gap-1 py-3 rounded-2xl bg-[#06C755] text-white font-bold border-3 border-[#05a847] active:scale-95 transition-all"
+            >
+              <span className="text-xl">💬</span>
+              <span className="text-xs">LINE</span>
+            </button>
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/invite/${referralCode}`
+                const text = `推しポチ❤️に招待されました！登録してボーナスハートをもらおう🎁 #推しポチ`
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener')
+              }}
+              className="flex flex-col items-center gap-1 py-3 rounded-2xl bg-black text-white font-bold border-3 border-gray-700 active:scale-95 transition-all"
+            >
+              <span className="text-xl">𝕏</span>
+              <span className="text-xs">X</span>
+            </button>
+            <button
+              onClick={async () => {
+                const url = `${window.location.origin}/invite/${referralCode}`
+                await navigator.clipboard.writeText(url)
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2000)
+              }}
+              className="flex flex-col items-center gap-1 py-3 rounded-2xl bg-gradient-to-br from-[#f09433] via-[#e6683c] to-[#bc1888] text-white font-bold border-3 border-[#c13584] active:scale-95 transition-all"
+            >
+              <span className="text-xl">📷</span>
+              <span className="text-xs">{copied ? 'OK!' : 'Insta'}</span>
+            </button>
+          </div>
 
           <p className="text-xs text-[#8b7355]">
             友だちが登録すると、あなたと友だちの両方に❤5個ボーナス！
