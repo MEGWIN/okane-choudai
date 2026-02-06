@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// TikTok OAuth 認可URLへリダイレクト
+// TikTok OAuth 認可URLへリダイレクト（2024-02 update）
 export async function GET(request: NextRequest) {
   const clientKey = process.env.TIKTOK_CLIENT_KEY
+
+  // デバッグ: 環境変数の確認
+  console.log('TIKTOK_CLIENT_KEY exists:', !!clientKey)
   const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin}/api/auth/tiktok/callback`
 
   if (!clientKey) {
