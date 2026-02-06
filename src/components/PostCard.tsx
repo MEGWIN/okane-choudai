@@ -15,6 +15,9 @@ interface Post {
     display_name: string | null
     avatar_url: string | null
     paypay_id: string | null
+    x_username?: string | null
+    tiktok_username?: string | null
+    is_sns_verified?: boolean | null
   } | null
 }
 
@@ -227,6 +230,9 @@ export default function PostCard({ post, rank }: { post: Post, rank: number }) {
         onClose={() => setShowModal(false)}
         amount={selectedAmount}
         paypayId={post.users?.paypay_id || ''}
+        xUsername={post.users?.x_username}
+        tiktokUsername={post.users?.tiktok_username}
+        isSnsVerified={post.users?.is_sns_verified ?? false}
       />
     </>
   )

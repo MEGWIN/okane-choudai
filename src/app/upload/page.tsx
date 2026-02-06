@@ -78,6 +78,21 @@ export default function UploadPage() {
     }
   }
 
+  // ファイルをBase64に変換
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result as string
+        // data:image/xxx;base64, の部分を除去
+        const base64 = result.split(',')[1]
+        resolve(base64)
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
   const handleUpload = async () => {
     if (!file || !selectedTopic) return
 
@@ -86,6 +101,21 @@ export default function UploadPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         alert('ログインが必要です')
+        setIsUploading(false)
+        return
+      }
+
+      // NSFW画像チェック
+      const base64 = await fileToBase64(file)
+      const moderationRes = await fetch('/api/moderate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64 }),
+      })
+      const moderation = await moderationRes.json()
+
+      if (!moderation.safe) {
+        alert('不適切な画像が検出されました。別の画像をお試しください。')
         setIsUploading(false)
         return
       }

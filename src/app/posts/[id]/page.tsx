@@ -63,7 +63,7 @@ export default async function PostDetailPage({ params }: Props) {
     .from('posts')
     .select(`
       id, image_url, caption, heart_count, created_at, topic_id,
-      users ( display_name, avatar_url, paypay_id )
+      users ( display_name, avatar_url, paypay_id, x_username, tiktok_username, is_sns_verified )
     `)
     .eq('id', id)
     .single()

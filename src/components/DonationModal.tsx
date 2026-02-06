@@ -1,16 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import { Copy, ExternalLink, X, Check } from 'lucide-react'
+import { Copy, ExternalLink, X, Check, AlertTriangle, CheckCircle } from 'lucide-react'
 
 interface DonationModalProps {
   isOpen: boolean
   onClose: () => void
   amount: number
   paypayId: string
+  // なりすまし対策用
+  xUsername?: string | null
+  tiktokUsername?: string | null
+  isSnsVerified?: boolean
 }
 
-export default function DonationModal({ isOpen, onClose, amount, paypayId }: DonationModalProps) {
+export default function DonationModal({
+  isOpen,
+  onClose,
+  amount,
+  paypayId,
+  xUsername,
+  tiktokUsername,
+  isSnsVerified
+}: DonationModalProps) {
   const [copied, setCopied] = useState(false)
 
   if (!isOpen) return null
@@ -92,6 +104,39 @@ export default function DonationModal({ isOpen, onClose, amount, paypayId }: Don
             <p className="text-sm text-[#8b7355]">金額</p>
             <p className="text-4xl font-bold text-[#3cb371]">¥{amount}</p>
           </div>
+
+          {/* SNS認証ステータス（なりすまし対策） */}
+          {isSnsVerified ? (
+            // SNS連携済み（信頼度高）
+            <div className="bg-[#e8f5e9] border-2 border-[#4caf50] rounded-xl p-3 space-y-1">
+              <div className="flex items-center gap-2 text-[#2e7d32]">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-bold text-sm">SNS認証済みアカウント</span>
+              </div>
+              {xUsername && (
+                <p className="text-sm text-[#2e7d32] pl-7">
+                  𝕏 @{xUsername}
+                </p>
+              )}
+              {tiktokUsername && (
+                <p className="text-sm text-[#2e7d32] pl-7">
+                  TikTok @{tiktokUsername}
+                </p>
+              )}
+            </div>
+          ) : (
+            // SNS未連携（注意喚起）
+            <div className="bg-[#fff3e0] border-2 border-[#ff9800] rounded-xl p-3 space-y-1">
+              <div className="flex items-center gap-2 text-[#e65100]">
+                <AlertTriangle className="w-5 h-5" />
+                <span className="font-bold text-sm">なりすまし注意</span>
+              </div>
+              <p className="text-xs text-[#bf360c] pl-7">
+                この投稿者はSNSアカウント未連携です。<br />
+                送金前に本人かご確認ください。
+              </p>
+            </div>
+          )}
 
         </div>
 

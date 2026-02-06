@@ -29,7 +29,10 @@ export default async function Home() {
         users (
           display_name,
           avatar_url,
-          paypay_id
+          paypay_id,
+          x_username,
+          tiktok_username,
+          is_sns_verified
         )
       `)
       .eq('topic_id', currentTopic.id)

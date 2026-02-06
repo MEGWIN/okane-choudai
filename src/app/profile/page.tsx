@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Camera, Copy, Check, Share2 } from 'lucide-react'
+import { Loader2, Camera, Copy, Check, Share2, CheckCircle, LinkIcon } from 'lucide-react'
 import Image from 'next/image'
 
 export default function ProfilePage() {
@@ -17,6 +17,9 @@ export default function ProfilePage() {
   const [referralCode, setReferralCode] = useState('')
   const [bonusHearts, setBonusHearts] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [xUsername, setXUsername] = useState<string | null>(null)
+  const [tiktokUsername, setTiktokUsername] = useState<string | null>(null)
+  const [isSnsVerified, setIsSnsVerified] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
   const router = useRouter()
@@ -41,6 +44,9 @@ export default function ProfilePage() {
         setPaypayId(profile.paypay_id || '')
         setAvatarUrl(profile.avatar_url || null)
         setBonusHearts(profile.bonus_hearts || 0)
+        setXUsername(profile.x_username || null)
+        setTiktokUsername(profile.tiktok_username || null)
+        setIsSnsVerified(profile.is_sns_verified || false)
 
         // Generate referral code if not exists
         if (profile.referral_code) {
@@ -212,6 +218,70 @@ export default function ProfilePage() {
             </>
           )}
         </button>
+
+        {/* SNS連携セクション（なりすまし対策） */}
+        <div className="ac-card bg-white/95 p-4 space-y-3">
+          <label className="text-sm font-bold text-[#5d4e37] flex items-center gap-2">
+            <LinkIcon className="w-4 h-4" /> SNS連携（信頼バッジ）
+          </label>
+
+          {isSnsVerified ? (
+            <div className="bg-[#e8f5e9] border-2 border-[#4caf50] rounded-2xl p-3 space-y-2">
+              <div className="flex items-center gap-2 text-[#2e7d32]">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-bold text-sm">SNS認証済み</span>
+              </div>
+              {xUsername && (
+                <p className="text-sm text-[#2e7d32] pl-7">𝕏 @{xUsername}</p>
+              )}
+              {tiktokUsername && (
+                <p className="text-sm text-[#2e7d32] pl-7">TikTok @{tiktokUsername}</p>
+              )}
+              <p className="text-xs text-[#558b2f] pl-7">
+                送金画面に信頼バッジが表示されます
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="bg-[#fff3e0] border-2 border-[#ff9800] rounded-2xl p-3">
+                <p className="text-sm text-[#e65100]">
+                  XまたはTikTokと連携すると、投稿に信頼バッジが表示されます。
+                  なりすまし防止に効果的です。
+                </p>
+              </div>
+
+              <button
+                onClick={async () => {
+                  // X連携（Supabase OAuth linkIdentity）
+                  const { error } = await supabase.auth.linkIdentity({
+                    provider: 'twitter',
+                    options: {
+                      redirectTo: `${location.origin}/auth/callback?next=/profile`,
+                    },
+                  })
+                  if (error) alert('連携エラー: ' + error.message)
+                }}
+                className="w-full py-3 bg-black text-white font-bold rounded-2xl flex items-center justify-center gap-3 border-3 border-gray-800 hover:bg-gray-900 transition-colors"
+              >
+                <span className="text-lg font-bold">𝕏</span>
+                Xアカウントを連携
+              </button>
+
+              <button
+                onClick={() => {
+                  // TikTokはSupabase未対応
+                  alert('TikTok連携は準備中です')
+                }}
+                className="w-full py-3 bg-gradient-to-r from-[#25F4EE] via-[#000] to-[#FE2C55] text-white font-bold rounded-2xl flex items-center justify-center gap-3 border-3 border-gray-800 hover:opacity-90 transition-colors"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="white">
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                </svg>
+                TikTokアカウントを連携
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Invite Section */}
         <div className="ac-card bg-white/95 p-4 space-y-3">
