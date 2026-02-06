@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   authUrl.searchParams.set('client_id', clientId)
   authUrl.searchParams.set('redirect_uri', redirectUri)
   authUrl.searchParams.set('state', state)
-  authUrl.searchParams.set('scope', 'profile openid')
+  authUrl.searchParams.set('scope', 'profile')
 
   // state を Cookie に保存（コールバックで検証用）
   const response = NextResponse.redirect(authUrl.toString())
