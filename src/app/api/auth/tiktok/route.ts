@@ -9,7 +9,13 @@ export async function GET(request: NextRequest) {
   const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin}/api/auth/tiktok/callback`
 
   if (!clientKey) {
-    return NextResponse.json({ error: 'TIKTOK_CLIENT_KEY is not configured' }, { status: 500 })
+    // デバッグ: 全環境変数のキー一覧（値は表示しない）
+    const envKeys = Object.keys(process.env).filter(k => k.includes('TIKTOK')).join(', ')
+    return NextResponse.json({
+      error: 'TIKTOK_CLIENT_KEY is not configured',
+      debug: `Available TIKTOK keys: ${envKeys || 'none'}`,
+      nodeEnv: process.env.NODE_ENV
+    }, { status: 500 })
   }
 
   // state パラメータ（CSRF対策）
