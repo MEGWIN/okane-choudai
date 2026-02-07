@@ -27,18 +27,32 @@ export default function UploadPage() {
   const supabase = createClient()
 
   // 24時間以内のお題を取得（現在 + 未来）
+  // DB に無ければ ensure_daily_topics RPC で自動生成してリトライ
   useEffect(() => {
     async function fetchTopics() {
       const now = new Date()
       const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
-      const { data } = await supabase
+      let { data } = await supabase
         .from('hourly_topics')
         .select('id, title, starts_at, ends_at')
         .gt('ends_at', now.toISOString())
         .lte('starts_at', in24h.toISOString())
         .eq('is_active', true)
         .order('starts_at', { ascending: true })
+
+      // お題が無ければ自動生成してリトライ
+      if (!data || data.length === 0) {
+        await supabase.rpc('ensure_daily_topics')
+        const retry = await supabase
+          .from('hourly_topics')
+          .select('id, title, starts_at, ends_at')
+          .gt('ends_at', now.toISOString())
+          .lte('starts_at', in24h.toISOString())
+          .eq('is_active', true)
+          .order('starts_at', { ascending: true })
+        data = retry.data
+      }
 
       if (data && data.length > 0) {
         setTopics(data)

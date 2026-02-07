@@ -8,6 +8,9 @@ export default async function Home() {
   const supabase = await createClient()
   const now = new Date().toISOString()
 
+  // 今日のお題が無ければ自動生成（固定リストをループ）
+  await supabase.rpc('ensure_daily_topics')
+
   // 現在のユーザーを取得
   const { data: { user } } = await supabase.auth.getUser()
 
