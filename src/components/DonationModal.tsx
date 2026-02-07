@@ -136,7 +136,7 @@ export default function DonationModal({
               </div>
               <p className="text-xs text-[#bf360c] pl-7">
                 この投稿者はSNSアカウント未連携です。<br />
-                送金前に本人かご確認ください。
+                本人確認ができないため、送金はご自身の判断でお願いします。
               </p>
             </div>
           )}
