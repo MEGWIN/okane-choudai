@@ -65,58 +65,70 @@ export async function GET(request: NextRequest) {
     // 3. Supabase でユーザーを作成または取得
     const supabase = await createClient()
 
-    // LINE の userId をメールアドレスの代わりに使用
+    // LINE の userId をメールアドレスとパスワードの代わりに使用
     const fakeEmail = `line_${profile.userId}@line.local`
+    const password = `line_auth_${profile.userId}_secret_key`
 
-    // まず既存ユーザーを検索
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('line_user_id', profile.userId)
-      .single()
+    // まずサインインを試みる（既存ユーザー）
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: fakeEmail,
+      password,
+    })
 
-    if (existingUser) {
-      // 既存ユーザー: Supabase Auth でセッションを作成
-      // Supabase の signInWithPassword は使えないので、カスタムトークンを使う
-      // または、anonymous セッションを活用する
-
-      // 簡易的な実装: ユーザーIDを Cookie に保存してアプリ側で処理
-      const response = NextResponse.redirect(`${origin}/auth/line-complete?userId=${existingUser.id}`)
-      response.cookies.delete('line_oauth_state')
-      return response
-    } else {
-      // 新規ユーザー: Supabase Auth に登録
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: fakeEmail,
-        password: `line_${profile.userId}_${Date.now()}`, // ランダムなパスワード
-        options: {
-          data: {
-            display_name: profile.displayName,
-            avatar_url: profile.pictureUrl,
-            auth_provider: 'line',
-          },
-        },
-      })
-
-      if (signUpError || !authData.user) {
-        console.error('Supabase signup error:', signUpError)
-        return NextResponse.redirect(`${origin}/login?error=signup_failed`)
-      }
-
-      // users テーブルに追加情報を保存
+    if (signInData?.user) {
+      // 既存ユーザー: プロフィール更新
       await supabase.from('users').upsert({
-        id: authData.user.id,
+        id: signInData.user.id,
         display_name: profile.displayName,
         avatar_url: profile.pictureUrl,
         auth_provider: 'line',
         line_user_id: profile.userId,
       })
 
-      // 年齢確認ページへリダイレクト
-      const response = NextResponse.redirect(`${origin}/verify-age`)
+      // 年齢確認チェック
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('is_verified_adult')
+        .eq('id', signInData.user.id)
+        .single()
+
+      const redirectPath = userProfile?.is_verified_adult ? '/' : '/verify-age'
+      const response = NextResponse.redirect(`${origin}${redirectPath}`)
       response.cookies.delete('line_oauth_state')
       return response
     }
+
+    // 新規ユーザー: Supabase Auth に登録
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email: fakeEmail,
+      password,
+      options: {
+        data: {
+          display_name: profile.displayName,
+          avatar_url: profile.pictureUrl,
+          auth_provider: 'line',
+        },
+      },
+    })
+
+    if (signUpError || !authData.user) {
+      console.error('Supabase signup error:', signUpError?.message, signUpError)
+      return NextResponse.redirect(`${origin}/login?error=signup_failed`)
+    }
+
+    // users テーブルに追加情報を保存
+    await supabase.from('users').upsert({
+      id: authData.user.id,
+      display_name: profile.displayName,
+      avatar_url: profile.pictureUrl,
+      auth_provider: 'line',
+      line_user_id: profile.userId,
+    })
+
+    // 年齢確認ページへリダイレクト
+    const response = NextResponse.redirect(`${origin}/verify-age`)
+    response.cookies.delete('line_oauth_state')
+    return response
   } catch (err: any) {
     console.error('LINE callback error:', err)
     return NextResponse.redirect(`${origin}/login?error=callback_failed`)
