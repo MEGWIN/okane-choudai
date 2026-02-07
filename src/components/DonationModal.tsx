@@ -126,6 +126,9 @@ export default function DonationModal({
               {!xUsername && !tiktokUsername && (
                 <p className="text-sm text-[#2e7d32] pl-7">LINE認証済み</p>
               )}
+              <p className="text-xs text-[#558b2f] pl-7">
+                送金前にリンク先のプロフィールをご確認ください
+              </p>
             </div>
           ) : (
             // SNS未連携（注意喚起）
