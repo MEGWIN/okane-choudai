@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
         avatar_url: profile.pictureUrl,
         auth_provider: 'line',
         line_user_id: profile.userId,
+        is_sns_verified: true,
       })
 
       // 年齢確認チェック
@@ -123,6 +124,7 @@ export async function GET(request: NextRequest) {
       avatar_url: profile.pictureUrl,
       auth_provider: 'line',
       line_user_id: profile.userId,
+      is_sns_verified: true,
     })
 
     // 年齢確認ページへリダイレクト

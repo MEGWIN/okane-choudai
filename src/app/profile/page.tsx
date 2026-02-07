@@ -237,6 +237,9 @@ export default function ProfilePage() {
               {tiktokUsername && (
                 <a href={`https://www.tiktok.com/@${tiktokUsername}`} target="_blank" rel="noopener noreferrer" className="block text-sm text-[#2e7d32] pl-7 hover:underline">TikTok @{tiktokUsername}</a>
               )}
+              {!xUsername && !tiktokUsername && (
+                <p className="text-sm text-[#2e7d32] pl-7">LINE認証済み</p>
+              )}
               <p className="text-xs text-[#558b2f] pl-7">
                 送金画面に信頼バッジが表示されます
               </p>
