@@ -114,14 +114,14 @@ export default function DonationModal({
                 <span className="font-bold text-sm">SNS認証済みアカウント</span>
               </div>
               {xUsername && (
-                <p className="text-sm text-[#2e7d32] pl-7">
+                <a href={`https://x.com/${xUsername}`} target="_blank" rel="noopener noreferrer" className="block text-sm text-[#2e7d32] pl-7 hover:underline">
                   𝕏 @{xUsername}
-                </p>
+                </a>
               )}
               {tiktokUsername && (
-                <p className="text-sm text-[#2e7d32] pl-7">
+                <a href={`https://www.tiktok.com/@${tiktokUsername}`} target="_blank" rel="noopener noreferrer" className="block text-sm text-[#2e7d32] pl-7 hover:underline">
                   TikTok @{tiktokUsername}
-                </p>
+                </a>
               )}
             </div>
           ) : (

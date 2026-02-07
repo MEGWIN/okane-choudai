@@ -232,10 +232,10 @@ export default function ProfilePage() {
                 <span className="font-bold text-sm">SNS認証済み</span>
               </div>
               {xUsername && (
-                <p className="text-sm text-[#2e7d32] pl-7">𝕏 @{xUsername}</p>
+                <a href={`https://x.com/${xUsername}`} target="_blank" rel="noopener noreferrer" className="block text-sm text-[#2e7d32] pl-7 hover:underline">𝕏 @{xUsername}</a>
               )}
               {tiktokUsername && (
-                <p className="text-sm text-[#2e7d32] pl-7">TikTok @{tiktokUsername}</p>
+                <a href={`https://www.tiktok.com/@${tiktokUsername}`} target="_blank" rel="noopener noreferrer" className="block text-sm text-[#2e7d32] pl-7 hover:underline">TikTok @{tiktokUsername}</a>
               )}
               <p className="text-xs text-[#558b2f] pl-7">
                 送金画面に信頼バッジが表示されます
