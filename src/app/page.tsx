@@ -1,13 +1,15 @@
 import { createClient } from '@/utils/supabase/server'
-import PostCard from '@/components/PostCard'
 import TopicBanner from '@/components/TopicBanner'
-import Link from 'next/link'
+import SwipeFeed from '@/components/SwipeFeed'
 
 export const dynamic = 'force-dynamic' // Always fetch fresh data
 
 export default async function Home() {
   const supabase = await createClient()
   const now = new Date().toISOString()
+
+  // 現在のユーザーを取得
+  const { data: { user } } = await supabase.auth.getUser()
 
   // 現在のお題を取得
   const { data: currentTopic } = await supabase
@@ -19,8 +21,18 @@ export default async function Home() {
     .limit(1)
     .single()
 
+  // フォロー中ユーザーを取得
+  let followingIds: string[] = []
+  if (user) {
+    const { data: follows } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', user.id)
+    followingIds = follows?.map(f => f.following_id) || []
+  }
+
   // 現在のお題の投稿のみ取得
-  let posts = null
+  let posts: any[] = []
   if (currentTopic) {
     const { data } = await supabase
       .from('posts')
@@ -38,48 +50,34 @@ export default async function Home() {
       .eq('topic_id', currentTopic.id)
       .gt('expires_at', now)
       .order('created_at', { ascending: false })
-    posts = data
+    posts = data || []
   }
 
-  // ❤数でランクを計算（表示順は新着のまま）
-  const rankMap = new Map<string, number>()
-  if (posts) {
+  // ❤数でランクを計算
+  const rankMap: Record<string, number> = {}
+  if (posts.length > 0) {
     const sorted = [...posts].sort((a, b) => (b.heart_count || 0) - (a.heart_count || 0))
-    sorted.forEach((p, i) => rankMap.set(p.id, i + 1))
+    sorted.forEach((p, i) => { rankMap[p.id] = i + 1 })
   }
+
+  // フォロー中ユーザーの投稿を先に、その後その他（各グループ内は新着順のまま）
+  const followingSet = new Set(followingIds)
+  const followedPosts = posts.filter(p => followingSet.has(p.user_id))
+  const otherPosts = posts.filter(p => !followingSet.has(p.user_id))
+  const sortedPosts = [...followedPosts, ...otherPosts]
 
   return (
     <div className="flex flex-col gap-6">
-
       {/* Current Topic Banner */}
       <TopicBanner />
 
-      {/* Hero / Welcome for empty state - Animal Crossing Style */}
-      {(!posts || posts.length === 0) && (
-        <div className="ac-card flex flex-col items-center justify-center py-12 px-6 text-center space-y-5 bg-[#fffacd]/95">
-          <div className="text-6xl bell-animate">🔔</div>
-          <h2 className="text-2xl font-bold text-[#5d4e37]">まだ投稿がありません</h2>
-          <p className="text-[#8b7355]">
-            一番乗りでお金をお願いしてみましょう！<br />
-            写真は1時間で消えるので安心です。
-          </p>
-          <Link
-            href="/upload"
-            className="ac-button px-8 py-4 text-lg"
-          >
-            投稿する
-          </Link>
-        </div>
-      )}
-
-      {/* Post Stream（新着順、ランクは❤数順） */}
-      <div className="flex flex-col gap-6">
-        {posts?.map((post) => (
-          // @ts-ignore
-          <PostCard key={post.id} post={post} rank={rankMap.get(post.id) || 1} />
-        ))}
-      </div>
-
+      {/* Swipe Feed */}
+      <SwipeFeed
+        posts={sortedPosts}
+        rankMap={rankMap}
+        currentUserId={user?.id ?? null}
+        followingIds={followingIds}
+      />
     </div>
   )
 }

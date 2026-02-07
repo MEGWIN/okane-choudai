@@ -5,12 +5,14 @@ import Image from 'next/image'
 import { Share2, Copy, Check, X } from 'lucide-react'
 import DonationModal from './DonationModal'
 import HeartButton from './HeartButton'
+import FollowButton from './FollowButton'
 
 interface Post {
   id: string
   image_url: string
   caption: string | null
   heart_count: number | null
+  user_id: string
   users: {
     display_name: string | null
     avatar_url: string | null
@@ -21,7 +23,7 @@ interface Post {
   } | null
 }
 
-export default function PostCard({ post, rank }: { post: Post, rank: number }) {
+export default function PostCard({ post, rank, currentUserId, isFollowing }: { post: Post, rank: number, currentUserId?: string | null, isFollowing?: boolean }) {
   const [showModal, setShowModal] = useState(false)
   const [selectedAmount, setSelectedAmount] = useState(100)
   const [heartCount, setHeartCount] = useState(post.heart_count || 0)
@@ -95,6 +97,11 @@ export default function PostCard({ post, rank }: { post: Post, rank: number }) {
           <div className="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md border-2 border-[#daa520] text-xs font-bold text-[#5d4e37] shadow-md max-w-[120px] truncate">
             {post.users?.display_name || 'ゲスト'}
           </div>
+          <FollowButton
+            targetUserId={post.user_id}
+            currentUserId={currentUserId ?? null}
+            initialFollowing={isFollowing ?? false}
+          />
         </div>
 
         {/* Image */}
