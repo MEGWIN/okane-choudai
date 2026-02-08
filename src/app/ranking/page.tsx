@@ -94,6 +94,33 @@ export default function RankingPage() {
       if (data) setPosts(data)
     }
     fetchRanking()
+
+    // リアルタイム購読: heart_countが変わったら即ランキング更新
+    const channel = supabase
+      .channel(`ranking-${selectedTopic.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'posts',
+          filter: `topic_id=eq.${selectedTopic.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as { id: string; heart_count: number }
+          setPosts(prev => {
+            const newPosts = prev.map(p =>
+              p.id === updated.id ? { ...p, heart_count: updated.heart_count } : p
+            )
+            return newPosts.sort((a, b) => (b.heart_count || 0) - (a.heart_count || 0))
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [selectedTopic, supabase])
 
   if (loading) return (
