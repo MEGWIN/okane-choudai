@@ -64,12 +64,14 @@ export default function HeartButton({ postId, heartCount, onVote }: HeartButtonP
     if (count <= 0 || !userId) return
     pendingRef.current = 0
 
-    // Fire-and-forget（UIはブロックしない）
+    // .then() で実行をトリガー（supabase-jsは遅延実行）
     supabase.rpc('batch_vote_hearts', {
       p_user_id: userId,
       p_post_id: postId,
       p_topic_id: topicId,
       p_hearts: count,
+    }).then(({ error }) => {
+      if (error) console.error('heart vote failed:', error)
     })
   }, [userId, postId, topicId, supabase])
 
