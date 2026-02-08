@@ -2,6 +2,17 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // 認証不要なパスはスキップ（高速化）
+  const { pathname } = request.nextUrl
+  if (
+    pathname === '/login' ||
+    pathname === '/terms' ||
+    pathname === '/privacy' ||
+    pathname.startsWith('/api/')
+  ) {
+    return NextResponse.next()
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })

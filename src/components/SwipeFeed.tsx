@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import PostCard from './PostCard'
 import Link from 'next/link'
 
@@ -22,23 +22,34 @@ interface FeedPost {
 
 const SEEN_KEY = 'oshipochi_seen_posts'
 
+// 初回だけ読み込み、以降はメモリ上で管理
+let seenCache: Set<string> | null = null
+
 function getSeenPosts(): Set<string> {
+  if (seenCache) return seenCache
   if (typeof window === 'undefined') return new Set()
   try {
     const raw = localStorage.getItem(SEEN_KEY)
-    return raw ? new Set(JSON.parse(raw)) : new Set()
+    seenCache = raw ? new Set(JSON.parse(raw)) : new Set()
+    return seenCache
   } catch {
-    return new Set()
+    seenCache = new Set()
+    return seenCache
   }
 }
 
+// 書き込みをデバウンスして頻繁なlocalStorage操作を抑止
+let saveTimer: ReturnType<typeof setTimeout> | null = null
 function markSeen(postId: string) {
   const seen = getSeenPosts()
   seen.add(postId)
-  // 古いエントリを掃除（最大200件保持）
-  const arr = Array.from(seen)
-  if (arr.length > 200) arr.splice(0, arr.length - 200)
-  localStorage.setItem(SEEN_KEY, JSON.stringify(arr))
+  // デバウンス: 500ms後にまとめて保存
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    const arr = Array.from(seen)
+    if (arr.length > 200) arr.splice(0, arr.length - 200)
+    localStorage.setItem(SEEN_KEY, JSON.stringify(arr))
+  }, 500)
 }
 
 export default function SwipeFeed({
@@ -52,7 +63,6 @@ export default function SwipeFeed({
   currentUserId: string | null
   followingIds: string[]
 }) {
-  // seen投稿をフィルタ
   const [seenSet, setSeenSet] = useState<Set<string>>(new Set())
   const [currentIndex, setCurrentIndex] = useState(0)
   const [swipeY, setSwipeY] = useState(0)
@@ -64,8 +74,17 @@ export default function SwipeFeed({
     setSeenSet(getSeenPosts())
   }, [])
 
-  // seen済みを除いた投稿リスト
-  const unseenPosts = posts.filter(p => !seenSet.has(p.id))
+  // useMemoでフィルタリング結果をキャッシュ
+  const unseenPosts = useMemo(
+    () => posts.filter(p => !seenSet.has(p.id)),
+    [posts, seenSet]
+  )
+
+  const followingSet = useMemo(
+    () => new Set(followingIds),
+    [followingIds]
+  )
+
   const currentPost = unseenPosts[currentIndex]
 
   const goNext = useCallback(() => {
@@ -76,7 +95,6 @@ export default function SwipeFeed({
     setSwipeY(0)
   }, [currentPost])
 
-  // タッチイベント
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY
     setIsSwiping(true)
@@ -85,7 +103,6 @@ export default function SwipeFeed({
   const onTouchMove = (e: React.TouchEvent) => {
     if (!isSwiping) return
     const diff = touchStartY.current - e.touches[0].clientY
-    // 上方向のみ（diff > 0）
     if (diff > 0) {
       setSwipeY(diff)
     }
@@ -93,7 +110,6 @@ export default function SwipeFeed({
 
   const onTouchEnd = () => {
     setIsSwiping(false)
-    // 80px以上スワイプしたら次へ
     if (swipeY > 80) {
       goNext()
     } else {
@@ -101,7 +117,6 @@ export default function SwipeFeed({
     }
   }
 
-  // 空ステート
   if (!currentPost || currentIndex >= unseenPosts.length) {
     return (
       <div className="ac-card flex flex-col items-center justify-center py-16 px-6 text-center space-y-5 bg-[#fffacd]/95">
@@ -122,8 +137,6 @@ export default function SwipeFeed({
       </div>
     )
   }
-
-  const followingSet = new Set(followingIds)
 
   return (
     <div className="relative">
@@ -171,7 +184,6 @@ export default function SwipeFeed({
         </div>
         <span className="text-xs text-[#8b7355] font-bold">上にスワイプで次へ</span>
 
-        {/* PCユーザー向け：ボタンでも次へ */}
         <button
           onClick={goNext}
           className="mt-1 px-6 py-2 rounded-2xl bg-white/80 text-[#5d4e37] font-bold text-sm border-2 border-[#daa520] active:scale-95 transition-all"

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Link from 'next/link'
-import { Home, Upload, User, Trophy } from 'lucide-react'
+import BottomNav from '@/components/BottomNav'
 
 export const metadata: Metadata = {
   title: '推しポチ❤️ | OshiPochi',
@@ -30,33 +30,7 @@ export default function RootLayout({
             {children}
           </main>
 
-          {/* Bottom Nav - Animal Crossing Style */}
-          <nav className="fixed bottom-0 w-full max-w-md z-50 ac-nav px-6 h-20 flex items-center justify-around">
-            <Link href="/" className="flex flex-col items-center gap-1 text-white/80 hover:text-white transition-colors">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <Home className="w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-bold">ホーム</span>
-            </Link>
-            <Link href="/upload" className="flex flex-col items-center gap-1 -mt-8">
-              <div className="bg-[#fffacd] text-[#5d4e37] p-4 rounded-full shadow-lg border-4 border-[#daa520] hover:scale-110 transition-transform">
-                <Upload className="w-7 h-7" />
-              </div>
-              <span className="text-[10px] font-bold text-white mt-1">とうこう</span>
-            </Link>
-            <Link href="/ranking" className="flex flex-col items-center gap-1 text-white/80 hover:text-white transition-colors">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <Trophy className="w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-bold">ランキング</span>
-            </Link>
-            <Link href="/profile" className="flex flex-col items-center gap-1 text-white/80 hover:text-white transition-colors">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <User className="w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-bold">マイページ</span>
-            </Link>
-          </nav>
+          <BottomNav />
 
         </div>
       </body>

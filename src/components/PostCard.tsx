@@ -110,6 +110,7 @@ export default function PostCard({ post, rank, currentUserId, isFollowing }: { p
             src={imageUrl}
             alt=""
             fill
+            sizes="(max-width: 448px) 100vw, 448px"
             className="object-cover"
             priority
           />
@@ -204,32 +205,6 @@ export default function PostCard({ post, rank, currentUserId, isFollowing }: { p
           )}
         </div>
 
-        <style jsx>{`
-          .flying-heart {
-            bottom: 15%;
-            left: 12%;
-            font-size: 1.5rem;
-            animation: flyToHeart 0.7s ease-out forwards;
-          }
-          @keyframes flyToHeart {
-            0% {
-              bottom: 15%;
-              left: 12%;
-              opacity: 1;
-              transform: scale(1);
-            }
-            30% {
-              opacity: 1;
-              transform: scale(2);
-            }
-            100% {
-              bottom: 90%;
-              left: 65%;
-              opacity: 0;
-              transform: scale(0.4);
-            }
-          }
-        `}</style>
       </div>
 
       <DonationModal

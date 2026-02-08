@@ -13,7 +13,7 @@ export default function HeartButton({ postId, heartCount, onVote }: HeartButtonP
   const [remainingHearts, setRemainingHearts] = useState(10)
   const [userId, setUserId] = useState<string | null>(null)
   const [topicId, setTopicId] = useState<string | null>(null)
-  const supabase = createClient()
+  const supabaseRef = useRef(createClient())
 
   // バッチ送信用
   const pendingRef = useRef(0)
@@ -26,37 +26,38 @@ export default function HeartButton({ postId, heartCount, onVote }: HeartButtonP
   }
 
   useEffect(() => {
+    const supabase = supabaseRef.current
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setUserId(user.id)
 
-      // 今時間の残りハート数を取得
       const hourStart = getCurrentHourStart()
-      const { data } = await supabase
-        .from('heart_votes')
-        .select('hearts')
-        .eq('user_id', user.id)
-        .gte('created_at', hourStart)
-
-      const used = data?.reduce((sum, v) => sum + v.hearts, 0) || 0
-      setRemainingHearts(Math.max(0, 10 - used))
-
-      // 現在のtopic_idをキャッシュ（毎クリック取得しない）
       const now = new Date().toISOString()
-      const { data: topic } = await supabase
-        .from('hourly_topics')
-        .select('id')
-        .lte('starts_at', now)
-        .gt('ends_at', now)
-        .eq('is_active', true)
-        .limit(1)
-        .single()
 
-      if (topic) setTopicId(topic.id)
+      // 並列で残りハートとtopic_idを取得
+      const [heartsRes, topicRes] = await Promise.all([
+        supabase
+          .from('heart_votes')
+          .select('hearts')
+          .eq('user_id', user.id)
+          .gte('created_at', hourStart),
+        supabase
+          .from('hourly_topics')
+          .select('id')
+          .lte('starts_at', now)
+          .gt('ends_at', now)
+          .eq('is_active', true)
+          .limit(1)
+          .single(),
+      ])
+
+      const used = heartsRes.data?.reduce((sum, v) => sum + v.hearts, 0) || 0
+      setRemainingHearts(Math.max(0, 10 - used))
+      if (topicRes.data) setTopicId(topicRes.data.id)
     }
     init()
-  }, [supabase])
+  }, [])
 
   // バッチ送信: 溜まったハートを1回のRPCで送る
   const flush = useCallback(() => {
@@ -64,8 +65,7 @@ export default function HeartButton({ postId, heartCount, onVote }: HeartButtonP
     if (count <= 0 || !userId) return
     pendingRef.current = 0
 
-    // .then() で実行をトリガー（supabase-jsは遅延実行）
-    supabase.rpc('batch_vote_hearts', {
+    supabaseRef.current.rpc('batch_vote_hearts', {
       p_user_id: userId,
       p_post_id: postId,
       p_topic_id: topicId,
@@ -73,7 +73,7 @@ export default function HeartButton({ postId, heartCount, onVote }: HeartButtonP
     }).then(({ error }) => {
       if (error) console.error('heart vote failed:', error)
     })
-  }, [userId, postId, topicId, supabase])
+  }, [userId, postId, topicId])
 
   // flushの最新版をrefで保持（cleanup用）
   const flushRef = useRef(flush)

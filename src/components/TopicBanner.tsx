@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
 
 // 固定お題リスト（時間帯別・JST）
 const FIXED_TOPICS = [
@@ -45,39 +44,27 @@ function getJSTNextHour() {
   return new Date(nextHour.getTime() - 9 * 60 * 60 * 1000)
 }
 
-export default function TopicBanner() {
-  const [topic, setTopic] = useState<{ id: string; title: string; ends_at: string } | null>(null)
+interface TopicBannerProps {
+  initialTopic?: { id: string; title: string; ends_at: string } | null
+}
+
+export default function TopicBanner({ initialTopic }: TopicBannerProps) {
+  const [topic, setTopic] = useState<{ id: string; title: string; ends_at: string } | null>(
+    initialTopic ?? null
+  )
   const [timeLeft, setTimeLeft] = useState('')
-  const supabase = createClient()
 
+  // サーバーからお題が来なかった場合のみフォールバック
   useEffect(() => {
-    async function fetchTopic() {
-      const now = new Date().toISOString()
-      const { data } = await supabase
-        .from('hourly_topics')
-        .select('id, title, ends_at')
-        .lte('starts_at', now)
-        .gt('ends_at', now)
-        .eq('is_active', true)
-        .order('starts_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (data) {
-        setTopic(data)
-      } else {
-        // DB にお題が無い場合、固定リストからフォールバック表示
-        const hour = getJSTHour()
-        const nextHour = getJSTNextHour()
-        setTopic({
-          id: 'fallback',
-          title: FIXED_TOPICS[hour],
-          ends_at: nextHour.toISOString(),
-        })
-      }
-    }
-    fetchTopic()
-  }, [supabase])
+    if (topic) return
+    const hour = getJSTHour()
+    const nextHour = getJSTNextHour()
+    setTopic({
+      id: 'fallback',
+      title: FIXED_TOPICS[hour],
+      ends_at: nextHour.toISOString(),
+    })
+  }, [topic])
 
   useEffect(() => {
     if (!topic) return

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Image from 'next/image'
 import { Loader2, X } from 'lucide-react'
@@ -32,70 +32,66 @@ export default function RankingPage() {
   const [posts, setPosts] = useState<RankedPost[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPost, setSelectedPost] = useState<{ post: RankedPost, rank: number } | null>(null)
-  const supabase = createClient()
+  const supabaseRef = useRef(createClient())
 
   useEffect(() => {
+    const supabase = supabaseRef.current
     async function fetchTopics() {
       const now = new Date().toISOString()
-
-      const { data: current } = await supabase
-        .from('hourly_topics')
-        .select('*')
-        .lte('starts_at', now)
-        .gt('ends_at', now)
-        .eq('is_active', true)
-        .limit(1)
-        .single()
-
-      if (current) {
-        setCurrentTopic(current)
-        setSelectedTopic(current)
-      }
-
       const todayStart = new Date()
       todayStart.setHours(0, 0, 0, 0)
 
-      const { data: past } = await supabase
-        .from('hourly_topics')
-        .select('*')
-        .gte('starts_at', todayStart.toISOString())
-        .lt('ends_at', now)
-        .eq('is_active', true)
-        .order('starts_at', { ascending: false })
+      // 並列でcurrentとpastを取得
+      const [currentRes, pastRes] = await Promise.all([
+        supabase
+          .from('hourly_topics')
+          .select('id, title, starts_at, ends_at')
+          .lte('starts_at', now)
+          .gt('ends_at', now)
+          .eq('is_active', true)
+          .limit(1)
+          .single(),
+        supabase
+          .from('hourly_topics')
+          .select('id, title, starts_at, ends_at')
+          .gte('starts_at', todayStart.toISOString())
+          .lt('ends_at', now)
+          .eq('is_active', true)
+          .order('starts_at', { ascending: false }),
+      ])
 
-      if (past) setPastTopics(past)
+      if (currentRes.data) {
+        setCurrentTopic(currentRes.data)
+        setSelectedTopic(currentRes.data)
+      }
+      if (pastRes.data) setPastTopics(pastRes.data)
       setLoading(false)
     }
     fetchTopics()
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     if (!selectedTopic) return
+
+    const supabase = supabaseRef.current
+    let cancelled = false
 
     async function fetchRanking() {
       const { data } = await supabase
         .from('posts')
         .select(`
-          id,
-          image_url,
-          caption,
-          heart_count,
-          users (
-            display_name,
-            avatar_url,
-            paypay_id
-          )
+          id, image_url, caption, heart_count,
+          users ( display_name, avatar_url, paypay_id )
         `)
         .eq('topic_id', selectedTopic!.id)
         .order('heart_count', { ascending: false })
         .limit(20)
 
       // @ts-ignore
-      if (data) setPosts(data)
+      if (!cancelled && data) setPosts(data)
     }
     fetchRanking()
 
-    // リアルタイム購読: heart_countが変わったら即ランキング更新
     const channel = supabase
       .channel(`ranking-${selectedTopic.id}`)
       .on(
@@ -119,17 +115,21 @@ export default function RankingPage() {
       .subscribe()
 
     return () => {
+      cancelled = true
       supabase.removeChannel(channel)
     }
-  }, [selectedTopic, supabase])
+  }, [selectedTopic])
+
+  const maxHearts = useMemo(
+    () => posts.length > 0 ? Math.max(...posts.map(p => p.heart_count || 0), 1) : 1,
+    [posts]
+  )
 
   if (loading) return (
     <div className="flex justify-center p-10">
       <Loader2 className="animate-spin text-[#3cb371] w-8 h-8" />
     </div>
   )
-
-  const maxHearts = posts.length > 0 ? Math.max(...posts.map(p => p.heart_count || 0), 1) : 1
 
   return (
     <>
@@ -211,6 +211,7 @@ export default function RankingPage() {
                         alt=""
                         width={56}
                         height={56}
+                        sizes="56px"
                         className="object-cover w-full h-full"
                       />
                     </div>

@@ -218,3 +218,30 @@ body {
 .auth-gradient {
   background: linear-gradient(180deg, hsl(145 40% 20%) 0%, hsl(145 50% 12%) 100%);
 }
+
+/* Flying heart animation (PostCard) */
+.flying-heart {
+  bottom: 15%;
+  left: 12%;
+  font-size: 1.5rem;
+  animation: flyToHeart 0.7s ease-out forwards;
+}
+
+@keyframes flyToHeart {
+  0% {
+    bottom: 15%;
+    left: 12%;
+    opacity: 1;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(2);
+  }
+  100% {
+    bottom: 90%;
+    left: 65%;
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
