@@ -260,9 +260,15 @@ export default function UploadPage() {
       )}
 
       <div className="space-y-4">
-        {/* Image Dropzone */}
+        {/* 正方形お知らせ */}
+        <div className="flex items-center gap-2 bg-[#fffacd]/80 rounded-xl px-3 py-2 border-2 border-[#daa520]/50">
+          <span className="text-base">📐</span>
+          <p className="text-xs font-bold text-[#5d4e37]">写真は正方形で表示されます。中央が見えるように撮ってね！</p>
+        </div>
+
+        {/* Image Dropzone（正方形） */}
         <div
-          className={`relative w-full aspect-[3/4] rounded-3xl border-4 border-dashed transition-all flex flex-col items-center justify-center overflow-hidden
+          className={`relative w-full aspect-square rounded-3xl border-4 border-dashed transition-all flex flex-col items-center justify-center overflow-hidden
             ${previewUrl ? 'border-transparent' : 'border-[#daa520] bg-[#fffacd]/80 hover:bg-[#fffacd]'}
           `}
           onDragOver={(e) => e.preventDefault()}

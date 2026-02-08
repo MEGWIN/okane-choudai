@@ -85,46 +85,33 @@ export default function PostCard({ post, rank, currentUserId, isFollowing }: { p
     <>
       <div className="relative w-full bg-[#fffacd] rounded-3xl overflow-hidden shadow-xl border-4 border-[#daa520]">
 
-        {/* Header - ユーザー名のみ */}
-        <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
-          <div className="w-9 h-9 rounded-full bg-[#3cb371] border-2 border-white flex items-center justify-center overflow-hidden shadow-md">
-             {post.users?.avatar_url ? (
-               <Image src={post.users.avatar_url} alt="" width={36} height={36} className="object-cover w-full h-full" />
-             ) : (
-               <span className="text-lg">🌱</span>
-             )}
+        {/* Header - ユーザー情報 + ランク（画像の上） */}
+        <div className="flex items-center justify-between px-3 py-2.5">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-full bg-[#3cb371] border-2 border-white flex items-center justify-center overflow-hidden shadow-md">
+               {post.users?.avatar_url ? (
+                 <Image src={post.users.avatar_url} alt="" width={36} height={36} className="object-cover w-full h-full" />
+               ) : (
+                 <span className="text-lg">🌱</span>
+               )}
+            </div>
+            <div className="px-2.5 py-1 rounded-full bg-white/90 border-2 border-[#daa520] text-xs font-bold text-[#5d4e37] shadow-md max-w-[120px] truncate">
+              {post.users?.display_name || 'ゲスト'}
+            </div>
+            <FollowButton
+              targetUserId={post.user_id}
+              currentUserId={currentUserId ?? null}
+              initialFollowing={isFollowing ?? false}
+            />
           </div>
-          <div className="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md border-2 border-[#daa520] text-xs font-bold text-[#5d4e37] shadow-md max-w-[120px] truncate">
-            {post.users?.display_name || 'ゲスト'}
-          </div>
-          <FollowButton
-            targetUserId={post.user_id}
-            currentUserId={currentUserId ?? null}
-            initialFollowing={isFollowing ?? false}
-          />
-        </div>
-
-        {/* Image */}
-        <div className="relative aspect-[3/4] w-full">
-          <Image
-            src={imageUrl}
-            alt=""
-            fill
-            sizes="(max-width: 448px) 100vw, 448px"
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#5d4e37]/80 via-transparent to-transparent opacity-90" />
-
-          {/* ❤トータル数 + ランキング順位バッジ */}
-          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
             <div
-              className={`flex items-center gap-1 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full transition-transform ${
+              className={`flex items-center gap-1 bg-[#5d4e37]/10 px-2.5 py-1 rounded-full transition-transform ${
                 heartBounce ? 'scale-125' : 'scale-100'
               }`}
             >
               <span className={`text-base transition-all ${heartBounce ? 'text-red-300 scale-125' : 'text-red-400'}`}>❤</span>
-              <span className="text-white font-bold text-base">{heartCount}</span>
+              <span className="text-[#5d4e37] font-bold text-base">{heartCount}</span>
             </div>
             <div className={`px-2.5 py-1 rounded-full font-bold text-xs shadow-md ${
               rank === 1 ? 'bg-[#ffd700] text-[#5d4e37]' :
@@ -137,6 +124,18 @@ export default function PostCard({ post, rank, currentUserId, isFollowing }: { p
           </div>
         </div>
 
+        {/* Image（正方形・ボタンなし） */}
+        <div className="relative aspect-square w-full">
+          <Image
+            src={imageUrl}
+            alt=""
+            fill
+            sizes="(max-width: 448px) 100vw, 448px"
+            className="object-cover"
+            priority
+          />
+        </div>
+
         {/* Flying hearts */}
         {flyingHearts.map(id => (
           <div
@@ -147,11 +146,11 @@ export default function PostCard({ post, rank, currentUserId, isFollowing }: { p
           </div>
         ))}
 
-        {/* Actions (Overlay at bottom) */}
-        <div className="absolute bottom-0 left-0 w-full px-3 pb-3 pt-2 flex flex-col gap-2 z-20">
+        {/* Actions（画像の下） */}
+        <div className="px-3 pb-3 pt-2.5 flex flex-col gap-2">
 
           {post.caption && (
-             <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 border-2 border-[#daa520]">
+             <div className="bg-white/90 rounded-xl px-3 py-1.5 border-2 border-[#daa520]">
                <p className="text-[#5d4e37] font-bold text-sm truncate">
                  {post.caption}
                </p>
@@ -170,13 +169,13 @@ export default function PostCard({ post, rank, currentUserId, isFollowing }: { p
           {!showSharePanel ? (
             <button
               onClick={() => setShowSharePanel(true)}
-              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/80 backdrop-blur-md text-[#5d4e37] font-bold text-sm border-2 border-[#daa520] active:scale-95 transition-all"
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/80 text-[#5d4e37] font-bold text-sm border-2 border-[#daa520] active:scale-95 transition-all"
             >
               <Share2 className="w-4 h-4" />
               シェアする
             </button>
           ) : (
-            <div className="bg-white/95 backdrop-blur-md rounded-xl border-2 border-[#daa520] p-2 space-y-1.5">
+            <div className="bg-white/95 rounded-xl border-2 border-[#daa520] p-2 space-y-1.5">
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs font-bold text-[#5d4e37]">シェア先を選択</span>
                 <button onClick={() => setShowSharePanel(false)} className="text-[#8b7355]">
